@@ -1,0 +1,28 @@
+# Bước 1: Sử dụng image Go chính thức
+FROM golang:1.23 AS builder
+
+# Bước 2: Thiết lập thư mục làm việc
+WORKDIR /app
+
+# Bước 3: Sao chép go.mod và go.sum và cài đặt dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Bước 4: Sao chép mã nguồn vào container
+COPY . .
+
+# Bước 5: Biên dịch ứng dụng
+RUN go build -o main .
+
+# Bước 6: Tạo một image mới cho ứng dụng
+FROM alpine:latest
+
+# Bước 7: Cài đặt thư viện cần thiết
+RUN apk --no-cache add ca-certificates
+
+# Bước 8: Sao chép ứng dụng từ image builder
+WORKDIR /root/
+COPY --from=builder /app/main .
+
+# Bước 9: Chạy ứng dụng
+CMD ["./main"]
